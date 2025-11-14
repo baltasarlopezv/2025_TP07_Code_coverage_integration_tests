@@ -129,7 +129,7 @@ Sistema web completo para la gestión y reserva de canchas deportivas. Permite a
 cd backend
 
 # Crear entorno virtual (si no existe)
-python -m venv venv
+python3 -m venv venv
 
 # Activar entorno virtual
 # En macOS/Linux:
@@ -185,7 +185,7 @@ El frontend estará disponible en: `http://localhost:5173`
 ```bash
 cd backend
 source venv/bin/activate  # macOS/Linux
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Levantar Frontend:**
@@ -200,8 +200,10 @@ npm run dev
 ```bash
 cd backend
 source venv/bin/activate
-pytest
-pytest --cov=app tests/
+python3 -m pytest
+python3 -m pytest --cov=app tests/
+# Ver reporte HTML
+open htmlcov/index.html
 ```
 
 ### Frontend
