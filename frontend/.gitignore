@@ -18,6 +18,9 @@ dist-ssr
 # Testing
 coverage
 .nyc_output
+cypress/results
+cypress/screenshots
+cypress/videos
 
 # Environment
 .env

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="28" failures="0" errors="0" time="3.342">
+    <testsuite name="src/components/__tests__/CourtCard.test.jsx" timestamp="2025-11-14T15:44:51.756Z" hostname="runnervmg1sw1" tests="6" failures="0" errors="0" skipped="0" time="0.11">
+        <testcase classname="src/components/__tests__/CourtCard.test.jsx" name="CourtCard Component &gt; should render court information correctly" time="0.059">
+        </testcase>
+        <testcase classname="src/components/__tests__/CourtCard.test.jsx" name="CourtCard Component &gt; should render image when image_url is provided" time="0.005">
+        </testcase>
+        <testcase classname="src/components/__tests__/CourtCard.test.jsx" name="CourtCard Component &gt; should render placeholder when image_url is not provided" time="0.004">
+        </testcase>
+        <testcase classname="src/components/__tests__/CourtCard.test.jsx" name="CourtCard Component &gt; should display &quot;Unknown Sport&quot; when sport is not provided" time="0.005">
+        </testcase>
+        <testcase classname="src/components/__tests__/CourtCard.test.jsx" name="CourtCard Component &gt; should call onReserve when Reserve button is clicked" time="0.029">
+        </testcase>
+        <testcase classname="src/components/__tests__/CourtCard.test.jsx" name="CourtCard Component &gt; should not render Reserve button when onReserve is not provided" time="0.006">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/context/__tests__/AuthContext.test.jsx" timestamp="2025-11-14T15:44:51.758Z" hostname="runnervmg1sw1" tests="4" failures="0" errors="0" skipped="0" time="0.144">
+        <testcase classname="src/context/__tests__/AuthContext.test.jsx" name="AuthContext &gt; should login successfully" time="0.029">
+        </testcase>
+        <testcase classname="src/context/__tests__/AuthContext.test.jsx" name="AuthContext &gt; should register successfully" time="0.004">
+        </testcase>
+        <testcase classname="src/context/__tests__/AuthContext.test.jsx" name="AuthContext &gt; should logout user" time="0.054">
+        </testcase>
+        <testcase classname="src/context/__tests__/AuthContext.test.jsx" name="AuthContext &gt; should check if user is admin" time="0.056">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/__tests__/api.test.js" timestamp="2025-11-14T15:44:51.759Z" hostname="runnervmg1sw1" tests="3" failures="0" errors="0" skipped="0" time="0.009">
+        <testcase classname="src/services/__tests__/api.test.js" name="API Service &gt; should create axios instance with correct baseURL" time="0.004">
+        </testcase>
+        <testcase classname="src/services/__tests__/api.test.js" name="API Service &gt; should verify axios interceptors are configured" time="0.001">
+        </testcase>
+        <testcase classname="src/services/__tests__/api.test.js" name="API Service &gt; should test localStorage token handling" time="0.002">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/__tests__/auth.test.js" timestamp="2025-11-14T15:44:51.760Z" hostname="runnervmg1sw1" tests="6" failures="0" errors="0" skipped="0" time="0.01">
+        <testcase classname="src/services/__tests__/auth.test.js" name="Auth Service &gt; should login successfully and store token" time="0.005">
+        </testcase>
+        <testcase classname="src/services/__tests__/auth.test.js" name="Auth Service &gt; should logout and clear localStorage" time="0">
+        </testcase>
+        <testcase classname="src/services/__tests__/auth.test.js" name="Auth Service &gt; should return token from localStorage" time="0.001">
+        </testcase>
+        <testcase classname="src/services/__tests__/auth.test.js" name="Auth Service &gt; should check if user is authenticated" time="0">
+        </testcase>
+        <testcase classname="src/services/__tests__/auth.test.js" name="Auth Service &gt; should get user profile" time="0.001">
+        </testcase>
+        <testcase classname="src/services/__tests__/auth.test.js" name="Auth Service &gt; should get current user from localStorage" time="0">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/__tests__/courts.test.js" timestamp="2025-11-14T15:44:51.762Z" hostname="runnervmg1sw1" tests="4" failures="0" errors="0" skipped="0" time="0.009">
+        <testcase classname="src/services/__tests__/courts.test.js" name="Courts Service &gt; should fetch all courts" time="0.004">
+        </testcase>
+        <testcase classname="src/services/__tests__/courts.test.js" name="Courts Service &gt; should fetch available slots" time="0">
+        </testcase>
+        <testcase classname="src/services/__tests__/courts.test.js" name="Courts Service &gt; should get court by id" time="0">
+        </testcase>
+        <testcase classname="src/services/__tests__/courts.test.js" name="Courts Service &gt; should create a court" time="0.001">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/__tests__/reservations.test.js" timestamp="2025-11-14T15:44:51.763Z" hostname="runnervmg1sw1" tests="5" failures="0" errors="0" skipped="0" time="0.006">
+        <testcase classname="src/services/__tests__/reservations.test.js" name="Reservations Service &gt; should create a reservation" time="0.003">
+        </testcase>
+        <testcase classname="src/services/__tests__/reservations.test.js" name="Reservations Service &gt; should fetch user reservations" time="0.001">
+        </testcase>
+        <testcase classname="src/services/__tests__/reservations.test.js" name="Reservations Service &gt; should cancel a reservation" time="0">
+        </testcase>
+        <testcase classname="src/services/__tests__/reservations.test.js" name="Reservations Service &gt; should get all reservations" time="0">
+        </testcase>
+        <testcase classname="src/services/__tests__/reservations.test.js" name="Reservations Service &gt; should get reservation by id" time="0.001">
+        </testcase>
+    </testsuite>
+</testsuites>
