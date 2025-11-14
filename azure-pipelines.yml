@@ -1,8 +1,11 @@
 trigger:
   - main
 
+# Use Self-Hosted agent pool (no parallelism limits)
 pool:
-  vmImage: 'ubuntu-latest'
+  name: 'SelfHosted'
+  demands:
+    - agent.name -equals Agent-Local-ARM64
 
 variables:
   pythonVersion: '3.10'
@@ -21,25 +24,26 @@ stages:
           - checkout: self
             fetchDepth: 0
 
-          # 2. Setup Python
-          - task: UsePythonVersion@0
-            displayName: 'Use Python $(pythonVersion)'
-            inputs:
-              versionSpec: '$(pythonVersion)'
-              addToPath: true
-
-          # 3. Install dependencies
+          # 2. Setup Python (use system Python on self-hosted agent)
           - script: |
-              python -m pip install --upgrade pip
-              pip install -r $(backendPath)/requirements.txt
-            displayName: 'Install Python dependencies'
+              echo "Using system Python version:"
+              python3 --version
+              echo "Setting up Python virtual environment..."
+              cd $(backendPath)
+              python3 -m venv venv
+              source venv/bin/activate
+              python3 -m pip install --upgrade pip
+              python3 -m pip install -r requirements.txt
+            displayName: 'Setup Python Environment & Install Dependencies'
 
-          # 4. Setup environment
+          # 3. Setup environment
           - script: |
-              cp $(backendPath)/.env.example $(backendPath)/.env
+              cd $(backendPath)
+              source venv/bin/activate
+              cp .env.example .env
             displayName: 'Setup environment file'
 
-          # 5. Prepare Analysis Configuration (SonarCloud)
+          # 4. Prepare Analysis Configuration (SonarCloud)
           - task: SonarCloudPrepare@2
             displayName: 'Prepare SonarCloud analysis'
             inputs:
@@ -57,17 +61,18 @@ stages:
                 sonar.test.inclusions=$(backendPath)/tests/**
                 sonar.exclusions=$(backendPath)/venv/**,$(backendPath)/tests/**,$(backendPath)/app/routes/**,$(backendPath)/app/init_db.py
 
-          # 6. Run pytest with coverage (BUILD STEP - before analysis)
+          # 5. Run pytest with coverage (BUILD STEP - before analysis)
           - script: |
               cd $(backendPath)
+              source venv/bin/activate
               pytest --junitxml=test-results.xml
             displayName: 'Run pytest with coverage'
 
-          # 7. Run Code Analysis (SonarCloud) - AFTER BUILD
+          # 6. Run Code Analysis (SonarCloud) - AFTER BUILD
           - task: SonarCloudAnalyze@2
             displayName: 'Run SonarCloud Code Analysis'
 
-          # 8. Publish Quality Gate Result (SonarCloud)
+          # 7. Publish Quality Gate Result (SonarCloud)
           - task: SonarCloudPublish@2
             displayName: 'Publish SonarCloud Quality Gate Result'
             inputs:
@@ -103,25 +108,23 @@ stages:
       - job: Frontend
         displayName: 'Frontend - React/Vite'
         steps:
-          # 1. Setup Node.js
-          - task: NodeTool@0
-            displayName: 'Use Node.js $(nodeVersion)'
-            inputs:
-              versionSpec: '$(nodeVersion)'
-
-          # 2. Install dependencies
+          # 1. Setup Node.js (use system Node on self-hosted agent)
           - script: |
+              echo "Using system Node.js version:"
+              node --version
+              npm --version
+              echo "Installing Frontend Dependencies..."
               cd $(frontendPath)
               npm ci
-            displayName: 'Install Node.js dependencies'
+            displayName: 'Setup Node Environment & Install Dependencies'
 
-          # 3. Run vitest with coverage
+          # 2. Run vitest with coverage
           - script: |
               cd $(frontendPath)
               npm run test:coverage -- --reporter=junit --reporter=default --outputFile.junit=test-results.xml
             displayName: 'Run vitest with coverage'
 
-          # 4. Publish test results
+          # 3. Publish test results
           - task: PublishTestResults@2
             displayName: 'Publish frontend test results'
             inputs:
@@ -131,7 +134,7 @@ stages:
               failTaskOnFailedTests: true
             condition: succeededOrFailed()
 
-          # 5. Publish code coverage
+          # 4. Publish code coverage
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish frontend code coverage'
             inputs:
@@ -140,13 +143,13 @@ stages:
               failIfCoverageEmpty: false
             condition: succeededOrFailed()
 
-          # 6. Build for production
+          # 5. Build for production
           - script: |
               cd $(frontendPath)
               npm run build
             displayName: 'Build frontend for production'
 
-          # 7. Publish frontend build artifact
+          # 6. Publish frontend build artifact
           - task: PublishPipelineArtifact@1
             displayName: 'Publish frontend artifact'
             inputs:
