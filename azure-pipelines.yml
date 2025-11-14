@@ -53,14 +53,14 @@ stages:
               configMode: 'manual'
               cliProjectKey: 'baltasarlopezv_2025_TP07_Code_coverage_integration_tests'
               cliProjectName: '2025_TP07_Code_coverage_integration_tests'
-              cliSources: 'backend'
+              cliSources: 'backend/app'
               extraProperties: |
-                sonar.sources=backend/app
                 sonar.python.coverage.reportPaths=backend/coverage.xml
                 sonar.python.version=3.10
                 sonar.tests=backend/tests
                 sonar.test.inclusions=backend/tests/**
                 sonar.exclusions=backend/venv/**,backend/tests/**,backend/app/routes/**,backend/app/init_db.py
+                sonar.sourceEncoding=UTF-8
 
           # 5. Run pytest with coverage (BUILD STEP - before analysis)
           - script: |
