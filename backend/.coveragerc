@@ -5,6 +5,7 @@ omit =
     */venv/*
     app/routes/*
     app/init_db.py
+relative_files = True
 
 [report]
 exclude_lines =
@@ -15,3 +16,9 @@ exclude_lines =
     if __name__ == .__main__.:
     if TYPE_CHECKING:
     @abstractmethod
+
+[xml]
+output = coverage.xml
+
+[html]
+directory = htmlcov

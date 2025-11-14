@@ -89,12 +89,12 @@ stages:
             condition: succeededOrFailed()
 
           # 9. Publish code coverage
-          - task: PublishCodeCoverageResults@2
+          - task: PublishCodeCoverageResults@1
             displayName: 'Publish backend code coverage'
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(backendPath)/coverage.xml'
-              pathToSources: '$(backendPath)/app'
+              pathToSources: '$(backendPath)'
               reportDirectory: '$(backendPath)/htmlcov'
               failIfCoverageEmpty: false
             condition: succeededOrFailed()
@@ -137,12 +137,12 @@ stages:
             condition: succeededOrFailed()
 
           # 4. Publish code coverage
-          - task: PublishCodeCoverageResults@2
+          - task: PublishCodeCoverageResults@1
             displayName: 'Publish frontend code coverage'
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(frontendPath)/coverage/cobertura-coverage.xml'
-              pathToSources: '$(frontendPath)/src'
+              pathToSources: '$(frontendPath)'
               reportDirectory: '$(frontendPath)/coverage/lcov-report'
               failIfCoverageEmpty: false
             condition: succeededOrFailed()
