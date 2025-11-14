@@ -44,7 +44,7 @@ stages:
             displayName: 'Setup environment file'
 
           # 4. Prepare Analysis Configuration (SonarCloud) - Python Project
-          - task: SonarCloudPrepare@2
+          - task: SonarCloudPrepare@3
             displayName: 'Prepare SonarCloud analysis'
             inputs:
               SonarCloud: 'SonarCloud'
@@ -61,7 +61,6 @@ stages:
                 sonar.tests=backend/tests
                 sonar.test.inclusions=backend/tests/**
                 sonar.exclusions=backend/venv/**,backend/tests/**,backend/app/routes/**,backend/app/init_db.py
-                sonar.working.directory=$(backendPath)/.scannerwork
 
           # 5. Run pytest with coverage (BUILD STEP - before analysis)
           - script: |
@@ -71,11 +70,11 @@ stages:
             displayName: 'Run pytest with coverage'
 
           # 6. Run Code Analysis (SonarCloud) - AFTER BUILD
-          - task: SonarCloudAnalyze@2
+          - task: SonarCloudAnalyze@3
             displayName: 'Run SonarCloud Code Analysis'
 
           # 7. Publish Quality Gate Result (SonarCloud)
-          - task: SonarCloudPublish@2
+          - task: SonarCloudPublish@3
             displayName: 'Publish SonarCloud Quality Gate Result'
             inputs:
               pollingTimeoutSec: '300'
@@ -91,10 +90,9 @@ stages:
             condition: succeededOrFailed()
 
           # 9. Publish code coverage
-          - task: PublishCodeCoverageResults@1
+          - task: PublishCodeCoverageResults@2
             displayName: 'Publish backend code coverage'
             inputs:
-              codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(backendPath)/coverage.xml'
               pathToSources: '$(backendPath)'
               reportDirectory: '$(backendPath)/htmlcov'
@@ -139,10 +137,9 @@ stages:
             condition: succeededOrFailed()
 
           # 4. Publish code coverage
-          - task: PublishCodeCoverageResults@1
+          - task: PublishCodeCoverageResults@2
             displayName: 'Publish frontend code coverage'
             inputs:
-              codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(frontendPath)/coverage/cobertura-coverage.xml'
               pathToSources: '$(frontendPath)'
               reportDirectory: '$(frontendPath)/coverage/lcov-report'

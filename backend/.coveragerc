@@ -1,10 +1,11 @@
 [run]
-source = app
+source = .
 omit =
     */tests/*
     */venv/*
     app/routes/*
     app/init_db.py
+    */site-packages/*
 relative_files = True
 
 [report]
