@@ -53,21 +53,26 @@ stages:
               configMode: 'manual'
               cliProjectKey: 'baltasarlopezv_2025_TP07_Code_coverage_integration_tests'
               cliProjectName: '2025_TP07_Code_coverage_integration_tests'
-              cliSources: 'backend/app'
+              cliSources: '.'
               extraProperties: |
+                sonar.sources=backend/app
                 sonar.python.coverage.reportPaths=backend/coverage.xml
                 sonar.python.version=3.10
                 sonar.tests=backend/tests
                 sonar.test.inclusions=backend/tests/**
                 sonar.exclusions=backend/venv/**,backend/tests/**,backend/app/routes/**,backend/app/init_db.py
                 sonar.sourceEncoding=UTF-8
+                sonar.projectBaseDir=.
 
           # 5. Run pytest with coverage (BUILD STEP - before analysis)
           - script: |
               cd $(backendPath)
               source venv/bin/activate
               pytest --cov=app --cov-report=xml:coverage.xml --cov-report=html:htmlcov --junitxml=test-results.xml
-            displayName: 'Run pytest with coverage'
+              # Fix coverage.xml paths for SonarCloud - replace absolute paths with relative
+              sed -i.bak "s|<source>.*backend/app</source>|<source>app</source>|g" coverage.xml
+              rm -f coverage.xml.bak
+            displayName: 'Run pytest with coverage and fix paths'
 
           # 6. Run Code Analysis (SonarCloud) - AFTER BUILD
           - task: SonarCloudAnalyze@3
