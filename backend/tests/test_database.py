@@ -12,18 +12,22 @@ class TestDatabaseSession:
     
     def test_get_db_yields_session(self):
         """Test that get_db yields a database session"""
-        # Use the generator
-        db_gen = get_db()
-        db = next(db_gen)
-        
-        # Should yield a session object
-        assert db is not None
-        
-        # Clean up
-        try:
-            next(db_gen)
-        except StopIteration:
-            pass  # Expected behavior
+        with patch('app.database.SessionLocal') as mock_session_class:
+            mock_session = Mock()
+            mock_session_class.return_value = mock_session
+            
+            # Use the generator
+            db_gen = get_db()
+            db = next(db_gen)
+            
+            # Should yield the mocked session object
+            assert db == mock_session
+            
+            # Clean up
+            try:
+                next(db_gen)
+            except StopIteration:
+                pass  # Expected behavior
     
     def test_get_db_closes_session(self):
         """Test that get_db closes session after use"""
