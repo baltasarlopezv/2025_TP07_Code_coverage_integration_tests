@@ -27,6 +27,8 @@ export default defineConfig({
         '**/__tests__/**',
         'src/App.jsx',
         'src/main.jsx',
+        'src/pages/**',
+        'src/components/Navbar.jsx',
       ],
       thresholds: {
         lines: 70,

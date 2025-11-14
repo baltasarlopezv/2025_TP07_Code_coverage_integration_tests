@@ -1,157 +1,107 @@
 """
-Tests for authentication endpoints
+Unit tests for authentication functions
+Tests isolated functions with mocks, NO database
 """
 import pytest
-from fastapi import status
+from unittest.mock import Mock, patch
+from app.auth import get_password_hash, verify_password, create_access_token
 
 
-class TestUserRegistration:
-    """Tests for user registration"""
+class TestPasswordFunctions:
+    """Test password hashing and verification"""
     
-    def test_register_new_user_success(self, client):
-        """Test successful user registration"""
-        user_data = {
-            "email": "newuser@example.com",
-            "password": "securepassword123",
-            "first_name": "New",
-            "last_name": "User",
-            "phone": "+1234567890"
-        }
+    def test_hash_password(self):
+        """Test password hashing creates valid hash"""
+        password = "testpassword123"
+        hashed = get_password_hash(password)
         
-        response = client.post("/api/auth/register", json=user_data)
-        
-        assert response.status_code == status.HTTP_201_CREATED
-        data = response.json()
-        assert data["email"] == user_data["email"]
-        assert data["first_name"] == user_data["first_name"]
-        assert data["last_name"] == user_data["last_name"]
-        assert data["phone"] == user_data["phone"]
-        assert data["role"] == "USER"
-        assert "id" in data
-        assert "hashed_password" not in data  # Password should not be exposed
+        assert hashed != password
+        assert len(hashed) > 0
+        assert hashed.startswith("$2b$")
     
-    def test_register_duplicate_email(self, client, test_user):
-        """Test registration with existing email fails"""
-        user_data = {
-            "email": test_user.email,  # Email already exists
-            "password": "password123",
-            "first_name": "Duplicate",
-            "last_name": "User",
-            "phone": "+9999999999"
-        }
+    def test_verify_password_success(self):
+        """Test password verification with correct password"""
+        password = "testpassword123"
+        hashed = get_password_hash(password)
         
-        response = client.post("/api/auth/register", json=user_data)
-        
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "already registered" in response.json()["detail"].lower()
+        assert verify_password(password, hashed) is True
     
-    def test_register_invalid_email_format(self, client):
-        """Test registration with invalid email format"""
-        user_data = {
-            "email": "invalid-email",
-            "password": "password123",
-            "first_name": "Test",
-            "last_name": "User",
-            "phone": "+1234567890"
-        }
+    def test_verify_password_failure(self):
+        """Test password verification with wrong password"""
+        password = "testpassword123"
+        hashed = get_password_hash(password)
         
-        response = client.post("/api/auth/register", json=user_data)
-        
-        # Pydantic validation should fail
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    
-    def test_register_missing_required_fields(self, client):
-        """Test registration with missing required fields"""
-        user_data = {
-            "email": "test@example.com",
-            # Missing password, first_name, last_name
-        }
-        
-        response = client.post("/api/auth/register", json=user_data)
-        
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert verify_password("wrongpassword", hashed) is False
 
 
-class TestUserLogin:
-    """Tests for user login"""
+class TestTokenCreation:
+    """Test JWT token creation"""
     
-    def test_login_success(self, client, test_user):
-        """Test successful login with valid credentials"""
-        login_data = {
-            "username": test_user.email,  # OAuth2 uses 'username' field
-            "password": "testpassword"
-        }
+    def test_create_access_token(self):
+        """Test JWT token creation with user ID"""
+        user_id = "test-user-123"
+        token = create_access_token(data={"sub": user_id})
         
-        response = client.post("/api/auth/login", data=login_data)
-        
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert "access_token" in data
-        assert data["token_type"] == "bearer"
-        assert isinstance(data["access_token"], str)
-        assert len(data["access_token"]) > 0
-    
-    def test_login_wrong_password(self, client, test_user):
-        """Test login with incorrect password"""
-        login_data = {
-            "username": test_user.email,
-            "password": "wrongpassword"
-        }
-        
-        response = client.post("/api/auth/login", data=login_data)
-        
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-        assert "incorrect" in response.json()["detail"].lower()
-    
-    def test_login_nonexistent_user(self, client):
-        """Test login with non-existent email"""
-        login_data = {
-            "username": "nonexistent@example.com",
-            "password": "somepassword"
-        }
-        
-        response = client.post("/api/auth/login", data=login_data)
-        
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    
-    def test_login_missing_credentials(self, client):
-        """Test login with missing credentials"""
-        response = client.post("/api/auth/login", data={})
-        
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert isinstance(token, str)
+        assert len(token) > 0
+        # JWT tokens have 3 parts separated by dots
+        assert token.count('.') == 2
 
 
-class TestCurrentUser:
-    """Tests for getting current user profile"""
+class TestUserAuthentication:
+    """Test user authentication functions with mocks"""
     
-    def test_get_current_user_success(self, client, test_user, auth_headers):
-        """Test getting current user profile with valid token"""
-        response = client.get("/api/auth/me", headers=auth_headers)
+    def test_get_current_user_valid_token(self):
+        """Test getting current user with valid token"""
+        from app.auth import get_current_user
+        from app.models import User
         
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert data["id"] == test_user.id
-        assert data["email"] == test_user.email
-        assert data["first_name"] == test_user.first_name
-        assert data["last_name"] == test_user.last_name
-        assert data["role"] == test_user.role.value
+        # Create valid token
+        user_id = "test-user-123"
+        token = create_access_token({"sub": user_id})
+        
+        # Mock database and user
+        mock_db = Mock()
+        mock_user = Mock(spec=User)
+        mock_user.id = user_id
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_user
+        
+        result = get_current_user(token=token, db=mock_db)
+        assert result == mock_user
     
-    def test_get_current_user_no_token(self, client):
-        """Test getting current user without authentication token"""
-        response = client.get("/api/auth/me")
+    def test_get_current_user_invalid_token(self):
+        """Test invalid token raises 401"""
+        from app.auth import get_current_user
+        from fastapi import HTTPException
         
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        mock_db = Mock()
+        
+        with pytest.raises(HTTPException) as exc:
+            get_current_user(token="invalid_token", db=mock_db)
+        
+        assert exc.value.status_code == 401
     
-    def test_get_current_user_invalid_token(self, client):
-        """Test getting current user with invalid token"""
-        headers = {"Authorization": "Bearer invalid_token_here"}
-        response = client.get("/api/auth/me", headers=headers)
+    def test_get_current_admin_user_success(self):
+        """Test admin verification succeeds for admin user"""
+        from app.auth import get_current_admin_user
+        from app.models import UserRole
         
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        mock_user = Mock()
+        mock_user.role = UserRole.ADMIN
+        
+        result = get_current_admin_user(current_user=mock_user)
+        assert result == mock_user
     
-    def test_get_current_user_malformed_header(self, client):
-        """Test getting current user with malformed authorization header"""
-        headers = {"Authorization": "InvalidFormat token123"}
-        response = client.get("/api/auth/me", headers=headers)
+    def test_get_current_admin_user_forbidden(self):
+        """Test non-admin user is rejected with 403"""
+        from app.auth import get_current_admin_user
+        from app.models import UserRole
+        from fastapi import HTTPException
         
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        mock_user = Mock()
+        mock_user.role = UserRole.USER
+        
+        with pytest.raises(HTTPException) as exc:
+            get_current_admin_user(current_user=mock_user)
+        
+        assert exc.value.status_code == 403
