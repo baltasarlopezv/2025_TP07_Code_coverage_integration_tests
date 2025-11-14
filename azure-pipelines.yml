@@ -43,7 +43,7 @@ stages:
               cp .env.example .env
             displayName: 'Setup environment file'
 
-          # 4. Prepare Analysis Configuration (SonarCloud)
+          # 4. Prepare Analysis Configuration (SonarCloud) - Python Project
           - task: SonarCloudPrepare@2
             displayName: 'Prepare SonarCloud analysis'
             inputs:
@@ -53,13 +53,13 @@ stages:
               configMode: 'manual'
               cliProjectKey: 'baltasarlopezv_2025_TP07_Code_coverage_integration_tests'
               cliProjectName: '2025_TP07_Code_coverage_integration_tests'
-              cliSources: '$(backendPath)/app'
+              cliSources: 'backend/app'
               extraProperties: |
-                sonar.python.coverage.reportPaths=$(backendPath)/coverage.xml
+                sonar.python.coverage.reportPaths=backend/coverage.xml
                 sonar.python.version=3.10
-                sonar.tests=$(backendPath)/tests
-                sonar.test.inclusions=$(backendPath)/tests/**
-                sonar.exclusions=$(backendPath)/venv/**,$(backendPath)/tests/**,$(backendPath)/app/routes/**,$(backendPath)/app/init_db.py
+                sonar.tests=backend/tests
+                sonar.test.inclusions=backend/tests/**
+                sonar.exclusions=backend/venv/**,backend/tests/**,backend/app/routes/**,backend/app/init_db.py
 
           # 5. Run pytest with coverage (BUILD STEP - before analysis)
           - script: |
