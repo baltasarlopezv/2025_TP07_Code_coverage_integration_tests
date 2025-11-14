@@ -18,6 +18,7 @@ dist-ssr
 # Testing
 coverage
 .nyc_output
+test-results.xml
 cypress/results
 cypress/screenshots
 cypress/videos

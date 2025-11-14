@@ -25,6 +25,7 @@ ENV/
 .coverage
 htmlcov/
 .tox/
+test-results.xml
 
 # Environment
 .env
