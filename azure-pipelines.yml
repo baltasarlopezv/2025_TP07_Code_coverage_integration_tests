@@ -51,6 +51,16 @@ stages:
               organization: 'baltasarlopezv'
               scannerMode: 'CLI'
               configMode: 'manual'
+          - task: SonarCloudPrepare@3
+          - task: SonarCloudAnalyze@3
+            inputs:
+              jdkversion: 'JAVA_HOME_17_X64'
+          - task: SonarCloudPublish@3
+            inputs:
+              pollingTimeoutSec: '10'
+              scannerMode: 'dotnet'
+              projectKey: 'baltasarlopezv_2025_TP07_Code_coverage_integration_tests'
+              projectName: '2025_TP07_Code_coverage_integration_tests'
               cliProjectKey: 'baltasarlopezv_2025_TP07_Code_coverage_integration_tests'
               cliProjectName: '2025_TP07_Code_coverage_integration_tests'
               cliSources: '$(backendPath)/app'
