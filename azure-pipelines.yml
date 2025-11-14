@@ -65,7 +65,7 @@ stages:
           - script: |
               cd $(backendPath)
               source venv/bin/activate
-              pytest --junitxml=test-results.xml
+              pytest --cov=app --cov-report=xml --cov-report=html --junitxml=test-results.xml
             displayName: 'Run pytest with coverage'
 
           # 6. Run Code Analysis (SonarCloud) - AFTER BUILD
@@ -92,8 +92,10 @@ stages:
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish backend code coverage'
             inputs:
+              codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(backendPath)/coverage.xml'
               pathToSources: '$(backendPath)/app'
+              reportDirectory: '$(backendPath)/htmlcov'
               failIfCoverageEmpty: false
             condition: succeededOrFailed()
 
@@ -138,8 +140,10 @@ stages:
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish frontend code coverage'
             inputs:
+              codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(frontendPath)/coverage/cobertura-coverage.xml'
               pathToSources: '$(frontendPath)/src'
+              reportDirectory: '$(frontendPath)/coverage/lcov-report'
               failIfCoverageEmpty: false
             condition: succeededOrFailed()
 
