@@ -3,7 +3,7 @@ trigger:
 
 # Use Self-Hosted agent pool (no parallelism limits)
 pool:
-  name: 'SelfHosted'
+  name: 'Azure Pipelines'  # Self-Hosted pool name
   demands:
     - agent.name -equals Agent-Local-ARM64
 
