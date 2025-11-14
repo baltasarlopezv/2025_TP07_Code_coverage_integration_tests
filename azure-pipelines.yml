@@ -17,25 +17,29 @@ stages:
       - job: Backend
         displayName: 'Backend - Python/FastAPI'
         steps:
-          # 1. Setup Python
+          # 1. Checkout with fetch depth 0 for SonarCloud blame information
+          - checkout: self
+            fetchDepth: 0
+
+          # 2. Setup Python
           - task: UsePythonVersion@0
             displayName: 'Use Python $(pythonVersion)'
             inputs:
               versionSpec: '$(pythonVersion)'
               addToPath: true
 
-          # 2. Install dependencies
+          # 3. Install dependencies
           - script: |
               python -m pip install --upgrade pip
               pip install -r $(backendPath)/requirements.txt
             displayName: 'Install Python dependencies'
 
-          # 3. Setup environment
+          # 4. Setup environment
           - script: |
               cp $(backendPath)/.env.example $(backendPath)/.env
             displayName: 'Setup environment file'
 
-          # 4. SonarCloudPrepare
+          # 5. Prepare Analysis Configuration (SonarCloud)
           - task: SonarCloudPrepare@2
             displayName: 'Prepare SonarCloud analysis'
             inputs:
@@ -53,19 +57,19 @@ stages:
                 sonar.test.inclusions=$(backendPath)/tests/**
                 sonar.exclusions=$(backendPath)/venv/**,$(backendPath)/tests/**,$(backendPath)/app/routes/**,$(backendPath)/app/init_db.py
 
-          # 5. Run pytest with coverage
+          # 6. Run pytest with coverage (BUILD STEP - before analysis)
           - script: |
               cd $(backendPath)
               pytest --junitxml=test-results.xml
             displayName: 'Run pytest with coverage'
 
-          # 6. SonarCloudAnalyze
+          # 7. Run Code Analysis (SonarCloud) - AFTER BUILD
           - task: SonarCloudAnalyze@2
-            displayName: 'Run SonarCloud analysis'
+            displayName: 'Run SonarCloud Code Analysis'
 
-          # 7. SonarCloudPublish
+          # 8. Publish Quality Gate Result (SonarCloud)
           - task: SonarCloudPublish@2
-            displayName: 'Publish SonarCloud results'
+            displayName: 'Publish SonarCloud Quality Gate Result'
             inputs:
               pollingTimeoutSec: '300'
 
@@ -150,92 +154,98 @@ stages:
               artifact: 'frontend'
               publishLocation: 'pipeline'
 
-  - stage: DeployQA
-    displayName: 'Deploy to QA & E2E Tests'
-    dependsOn: BuildAndTest
-    condition: succeeded()
-    jobs:
-      - deployment: DeployBackend
-        displayName: 'Deploy Backend to Azure'
-        environment: 'QA'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: UsePythonVersion@0
-                  displayName: 'Use Python $(pythonVersion)'
-                  inputs:
-                    versionSpec: '$(pythonVersion)'
+  # STAGE 2: Deploy to QA & E2E Tests (COMMENTED - Configure Azure resources first)
+  # Uncomment this stage after:
+  # 1. Creating Azure Web Apps: tp7-courts-api-qa and tp7-courts-web-qa
+  # 2. Creating Azure Service Connection in Azure DevOps
+  # 3. Installing and configuring Cypress tests
 
-                - task: AzureWebApp@1
-                  displayName: 'Deploy to Azure Web App'
-                  inputs:
-                    azureSubscription: 'Azure-Service-Connection'
-                    appType: 'webAppLinux'
-                    appName: 'tp7-courts-api-qa'
-                    package: '$(Pipeline.Workspace)/backend'
-                    runtimeStack: 'PYTHON|3.10'
-                    startUpCommand: 'uvicorn app.main:app --host 0.0.0.0 --port 8000'
-
-      - deployment: DeployFrontend
-        displayName: 'Deploy Frontend to Azure'
-        environment: 'QA'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: AzureWebApp@1
-                  displayName: 'Deploy to Azure Web App'
-                  inputs:
-                    azureSubscription: 'Azure-Service-Connection'
-                    appType: 'webAppLinux'
-                    appName: 'tp7-courts-web-qa'
-                    package: '$(Pipeline.Workspace)/frontend'
-                    runtimeStack: 'NODE|18-lts'
-
-      - job: E2ETests
-        displayName: 'Cypress E2E Tests'
-        dependsOn: 
-          - DeployBackend
-          - DeployFrontend
-        steps:
-          # 1. Setup Node.js for Cypress
-          - task: NodeTool@0
-            displayName: 'Use Node.js $(nodeVersion)'
-            inputs:
-              versionSpec: '$(nodeVersion)'
-
-          # 2. Install dependencies including Cypress
-          - script: |
-              cd $(frontendPath)
-              npm ci
-              npx cypress install
-            displayName: 'Install Cypress and dependencies'
-
-          # 3. Run Cypress tests
-          - script: |
-              cd $(frontendPath)
-              export CYPRESS_baseUrl=https://tp7-courts-web-qa.azurewebsites.net
-              export VITE_API_URL=https://tp7-courts-api-qa.azurewebsites.net
-              npx cypress run
-            displayName: 'Run Cypress E2E tests'
-            continueOnError: false
-
-          # 4. Publish Cypress test results
-          - task: PublishTestResults@2
-            displayName: 'Publish Cypress test results'
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: '$(frontendPath)/cypress/results/*.xml'
-              testRunTitle: 'E2E Tests (Cypress)'
-              failTaskOnFailedTests: true
-            condition: succeededOrFailed()
-
-          # 5. Publish Cypress screenshots on failure
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish Cypress screenshots'
-            inputs:
-              targetPath: '$(frontendPath)/cypress/screenshots'
-              artifact: 'cypress-screenshots'
-              publishLocation: 'pipeline'
-            condition: failed()
+  # - stage: DeployQA
+  #   displayName: 'Deploy to QA & E2E Tests'
+  #   dependsOn: BuildAndTest
+  #   condition: succeeded()
+  #   jobs:
+  #     - deployment: DeployBackend
+  #       displayName: 'Deploy Backend to Azure'
+  #       environment: 'QA'
+  #       strategy:
+  #         runOnce:
+  #           deploy:
+  #             steps:
+  #               - task: UsePythonVersion@0
+  #                 displayName: 'Use Python $(pythonVersion)'
+  #                 inputs:
+  #                   versionSpec: '$(pythonVersion)'
+  #
+  #               - task: AzureWebApp@1
+  #                 displayName: 'Deploy to Azure Web App'
+  #                 inputs:
+  #                   azureSubscription: 'Azure-Service-Connection'
+  #                   appType: 'webAppLinux'
+  #                   appName: 'tp7-courts-api-qa'
+  #                   package: '$(Pipeline.Workspace)/backend'
+  #                   runtimeStack: 'PYTHON|3.10'
+  #                   startUpCommand: 'uvicorn app.main:app --host 0.0.0.0 --port 8000'
+  #
+  #     - deployment: DeployFrontend
+  #       displayName: 'Deploy Frontend to Azure'
+  #       environment: 'QA'
+  #       strategy:
+  #         runOnce:
+  #           deploy:
+  #             steps:
+  #               - task: AzureWebApp@1
+  #                 displayName: 'Deploy to Azure Web App'
+  #                 inputs:
+  #                   azureSubscription: 'Azure-Service-Connection'
+  #                   appType: 'webAppLinux'
+  #                   appName: 'tp7-courts-web-qa'
+  #                   package: '$(Pipeline.Workspace)/frontend'
+  #                   runtimeStack: 'NODE|18-lts'
+  #
+  #     - job: E2ETests
+  #       displayName: 'Cypress E2E Tests'
+  #       dependsOn: 
+  #         - DeployBackend
+  #         - DeployFrontend
+  #       steps:
+  #         # 1. Setup Node.js for Cypress
+  #         - task: NodeTool@0
+  #           displayName: 'Use Node.js $(nodeVersion)'
+  #           inputs:
+  #             versionSpec: '$(nodeVersion)'
+  #
+  #         # 2. Install dependencies including Cypress
+  #         - script: |
+  #             cd $(frontendPath)
+  #             npm ci
+  #             npx cypress install
+  #           displayName: 'Install Cypress and dependencies'
+  #
+  #         # 3. Run Cypress tests
+  #         - script: |
+  #             cd $(frontendPath)
+  #             export CYPRESS_baseUrl=https://tp7-courts-web-qa.azurewebsites.net
+  #             export VITE_API_URL=https://tp7-courts-api-qa.azurewebsites.net
+  #             npx cypress run
+  #           displayName: 'Run Cypress E2E tests'
+  #           continueOnError: false
+  #
+  #         # 4. Publish Cypress test results
+  #         - task: PublishTestResults@2
+  #           displayName: 'Publish Cypress test results'
+  #           inputs:
+  #             testResultsFormat: 'JUnit'
+  #             testResultsFiles: '$(frontendPath)/cypress/results/*.xml'
+  #             testRunTitle: 'E2E Tests (Cypress)'
+  #             failTaskOnFailedTests: true
+  #           condition: succeededOrFailed()
+  #
+  #         # 5. Publish Cypress screenshots on failure
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish Cypress screenshots'
+  #           inputs:
+  #             targetPath: '$(frontendPath)/cypress/screenshots'
+  #             artifact: 'cypress-screenshots'
+  #             publishLocation: 'pipeline'
+  #           condition: failed()
